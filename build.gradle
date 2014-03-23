@@ -1,0 +1,58 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:0.7.+'
+    }
+}
+
+apply plugin: 'android-library'
+
+repositories {
+    mavenCentral()
+}
+
+android {
+    compileSdkVersion 14
+    buildToolsVersion '19.0.3'
+
+    defaultConfig {
+        minSdkVersion 10
+        targetSdkVersion 14
+    }
+}
+
+dependencies {
+    compile files('libs/J0Util-1.0.jar')
+    compile 'com.android.support:appcompat-v7:+'
+}
+
+task makeJavadoc(type: Javadoc, dependsOn: ':J0Widget:compileReleaseJava') {
+    destinationDir = project.file('result-jars/javadoc')
+    source = fileTree(dir: 'src/main/java')
+    classpath = files("${android.plugin.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar")
+}
+
+task makeJavadocJar(type: Jar, dependsOn: ':J0Widget:makeJavadoc') {
+    destinationDir project.file('result-jars')
+    classifier 'javadoc'
+    from project.file('result-jars/javadoc')
+}
+
+task makeJar(type: Jar, dependsOn: ':J0Widget:compileReleaseJava') {
+    destinationDir project.file('result-jars')
+    from project.file('build/classes/release')
+}
+
+task makeAar(type: Copy, dependsOn: ':J0Widget:bundleRelease') {
+    from(project.file('build/libs'), {
+        include '**/*.aar'
+        exclude '**/*debug*'
+    })
+
+    into project.file('result-jars')
+}
+
+assembleRelease.dependsOn new HashSet<>([makeJar, makeAar, makeJavadocJar])
