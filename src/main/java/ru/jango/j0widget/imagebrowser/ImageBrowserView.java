@@ -200,13 +200,13 @@ public class ImageBrowserView extends View {
 
     /**
      * Checks viewport bounds to be in acceptable range and position.
-     * <li>
-     * <ul>viewport must have the same proportions, as bitmap has</ul>
-     * <ul>viewport must not be smaller special value, according to {@link #getMaxZoom()}</ul>
-     * <ul>viewport bounds must not be greater than bitmap bounds</ul>
-     * <ul>viewport position must be inside bitmap bounds (to show some part of the bitmap,
-     * not just empty space)</ul>
-     * </li>
+     * <ul>
+     * <li>viewport must have the same proportions, as bitmap has</li>
+     * <li>viewport must not be smaller special value, according to {@link #getMaxZoom()}</li>
+     * <li>viewport bounds must not be greater than bitmap bounds</li>
+     * <li>viewport position must be inside bitmap bounds (to show some part of the bitmap,
+     * not just empty space)</li>
+     * </ul>
      */
     private void checkViewportShapeAndBounds() {
         calculateSize(viewport.width() * viewport.height(),
@@ -223,12 +223,12 @@ public class ImageBrowserView extends View {
 
     /**
      * Checks viewport bounds to be in acceptable range and position.
-     * <li>
-     * <ul>viewport must not be smaller special value, according to {@link #getMaxZoom()}</ul>
-     * <ul>viewport bounds must not be greater than bitmap bounds</ul>
-     * <ul>viewport position must be inside bitmap bounds (to show some part of the bitmap,
-     * not just empty space)</ul>
-     * </li>
+     * <ul>
+     * <li>viewport must not be smaller special value, according to {@link #getMaxZoom()}</li>
+     * <li>viewport bounds must not be greater than bitmap bounds</li>
+     * <li>viewport position must be inside bitmap bounds (to show some part of the bitmap,
+     * not just empty space)</li>
+     * </ul>
      */
     private void checkViewportBounds() {
         if (bitmap == null) return;

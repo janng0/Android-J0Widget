@@ -27,6 +27,7 @@ android {
 dependencies {
     compile files('libs/J0Util-1.0.jar')
     compile 'com.android.support:appcompat-v7:+'
+    androidTestCompile 'junit:junit:4.8.1@jar'
 }
 
 task makeJavadoc(type: Javadoc, dependsOn: ':J0Widget:compileReleaseJava') {
