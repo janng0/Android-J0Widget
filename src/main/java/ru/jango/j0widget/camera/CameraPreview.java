@@ -49,19 +49,31 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
 
         addView(surfaceView);
     }
-    
+
+    /**
+     * @see android.hardware.Camera.Parameters#setPictureSize(int, int)
+     */
 	public int getPictureWidth() {
 		return picWidth;
 	}
-	
+
+    /**
+     * @see android.hardware.Camera.Parameters#setPictureSize(int, int)
+     */
 	public void setPictureWidth(int picWidth) {
 		this.picWidth = picWidth;
 	}
-	
+
+    /**
+     * @see android.hardware.Camera.Parameters#setPictureSize(int, int)
+     */
 	public int getPictureHeight() {
 		return picHeight;
 	}
-	
+
+    /**
+     * @see android.hardware.Camera.Parameters#setPictureSize(int, int)
+     */
 	public void setPictureHeight(int picHeight) {
 		this.picHeight = picHeight;
 	}
@@ -70,6 +82,10 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
         this.camera = camera;
     }
 
+    /**
+     * Starts preview. {@link android.hardware.Camera} object should be already set by
+     * {@link #setCamera(android.hardware.Camera)}. Otherwise method will do nothing.
+     */
     public void startPreview() {
     	if (camera == null || previewSize == null || previewStarted)
     		return;
@@ -80,10 +96,14 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
    			camera.startPreview();
    			previewStarted = true;
    		} catch(Exception e) {
-   			LogUtil.e(CameraPreview.class, "start preview fail: " + e);
+   			LogUtil.e(CameraPreview.class, "Starting preview failed: " + e);
    		}
     }
-    
+
+    /**
+     * Stops preview. {@link android.hardware.Camera} object should be already set by
+     * {@link #setCamera(android.hardware.Camera)}. Otherwise method will do nothing.
+     */
     public void stopPreview() {
     	if (camera == null || !previewStarted)
     		return;
@@ -93,19 +113,22 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
    			surfaceView.setVisibility(View.INVISIBLE);
    			camera.stopPreview();
    		} catch(Exception e) {
-   			LogUtil.e(CameraPreview.class, "trop preview fail: "+e);
+   			LogUtil.e(CameraPreview.class, "Stopping preview failed: " + e);
    		}
     }
     
     /**
-     * Тормозит превью, запоминает новую камеру и запускает превью с нее.
+     * Stops preview by {@link #stopPreview()} (it releases old camera), than remembers new camera
+     * and starts preview from it.
+     * <p>
+     * <b>NOTE</b>: switch camera is NOT the same as stop preview, set new camera and start preview.
      * 
-     * @param camera	новая камера
+     * @param camera	new camera
      */
     public void switchCamera(Camera camera) {
     	stopPreview();
    		try { camera.setPreviewDisplay(surfaceView.getHolder()); } 
-   		catch(Exception e) { LogUtil.e(CameraPreview.class, "set holder to camera fail: "+e); }
+   		catch(Exception e) { LogUtil.e(CameraPreview.class, "Setting holder for new camera failed: " + e); }
    		
     	setCamera(camera);
     	startPreview();
@@ -141,7 +164,7 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
    		try { camera.setPreviewDisplay(surfaceView.getHolder()); } 
-   		catch(Exception e) { LogUtil.e(CameraPreview.class, "set holder to camera failled: "+e); }
+   		catch(Exception e) { LogUtil.e(CameraPreview.class, "Setting SurfaceHolder for camera failed: " + e); }
     }
 
     @Override
@@ -162,19 +185,26 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
     	final Size picSize = getOptimalSize(params.getSupportedPictureSizes(), picWidth, picHeight);
     	params.setPreviewSize(previewSize.width, previewSize.height);
     	params.setPictureSize(picSize.width, picSize.height);
-    	
+
         camera.setParameters(params);
 		camera.setDisplayOrientation(RotationUtil.getCameraRotation(getContext()));
     }
-    
+
+    /**
+     * Heart of the class. Looks through collection of supported by camera sizes and returns the
+     * most suitable.
+     */
     private Size getOptimalSize(List<Size> sizes, int w, int h) {
         if (sizes == null) 
         	return null;
         
         Size optimalSize = sizes.get(0);
         for (Size size : sizes) {
+            // optimal size should be the closest to the required; it could be checked by squares
         	final boolean squareCheck = (w*h - size.width*size.height) <= 
         			(w*h - optimalSize.width*optimalSize.height);
+
+            // but it still should be inside required bounds
         	final boolean widthCheck = size.width <= w;
         	final boolean heightCheck = size.height <= h;
         	

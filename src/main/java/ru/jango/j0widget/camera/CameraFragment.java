@@ -150,7 +150,7 @@ public class CameraFragment extends Fragment implements Camera.PictureCallback, 
 		this.maxCacheSize = maxCacheSize;
 	}
 
-	public boolean isRestartOnResume() {
+	public boolean shouldRestartOnResume() {
 		return restartOnResume;
 	}
 

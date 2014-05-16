@@ -10,6 +10,10 @@ import java.util.List;
 
 import android.widget.BaseAdapter;
 
+/**
+ * A simple wrapper for {@link android.widget.BaseAdapter}. Acts like an {@link android.widget.ArrayAdapter},
+ * but doesn't need {@link android.content.Context} or any resources for displaying items.
+ */
 public abstract class ListAdapter<T extends Object> extends BaseAdapter implements Iterable<T> {
 	private List<T> items = new LinkedList<T>();
 

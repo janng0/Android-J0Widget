@@ -216,7 +216,7 @@ public class BitmapProcessor implements Runnable {
 	public void run() {
 		try { doProcess(); }
 		catch(Exception e) {
-			LogUtil.e(BitmapProcessor.class, "failed to process bitmap: " + e);
+			LogUtil.e(BitmapProcessor.class, "Bitmap processing failed: " + e);
 		}
 	}
 	
@@ -231,6 +231,5 @@ public class BitmapProcessor implements Runnable {
 		 * 					{@link BitmapProcessor#getThumbHeight()}
 		 */
 		public void bitmapProcessed(URI dataID, byte[] data, Bitmap thumb);
-		
 	}
 }

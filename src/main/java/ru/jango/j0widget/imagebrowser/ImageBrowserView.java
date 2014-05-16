@@ -20,6 +20,7 @@ import android.view.View;
 import android.widget.OverScroller;
 
 public class ImageBrowserView extends View {
+
     public static final float DEFAULT_MAX_ZOOM = 15f;
 
     private static final float AUTOZOOM_AMOUNT = 0.25f;
@@ -31,6 +32,8 @@ public class ImageBrowserView extends View {
     private final Rect contentRect = new Rect();
     private final Rect viewport = new Rect();
 
+    // special vars for optimization: some methods need such objects (Rect and Point), so to not
+    // create them every time, they are created here and reused where needed
     private final Rect rectBuffer = new Rect();
     private final Point pointBuffer = new Point();
 
@@ -161,6 +164,13 @@ public class ImageBrowserView extends View {
         }
     }
 
+    /**
+     * Viewport determines some special part of the bitmap, that should be shown. But a View
+     * itself also has paddings and margins. This method creates a rect, that determines, where
+     * View's content should actually be drawn.
+     *
+     * @param ret   object, through witch the result would be returned
+     */
     private void makeViewportDestRect(final Rect ret) {
         ret.set(0, 0, 0, 0);
         ret.right = (int) Math.floor(viewport.width() / getViewportScaleFactor());
@@ -172,6 +182,9 @@ public class ImageBrowserView extends View {
             ret.offset(0, (int) Math.ceil((contentRect.height() - ret.bottom) / 2));
     }
 
+    /**
+     * Checks if viewport rect was initialized. If it wasn't - method initializes it.
+     */
     private void checkViewportEmpty() {
         if (bitmap == null) return;
         if (!viewport.isEmpty()) return;
@@ -185,8 +198,18 @@ public class ImageBrowserView extends View {
                 ((float) viewport.height()) / ((float) contentRect.height()));
     }
 
+    /**
+     * Checks viewport bounds to be in acceptable range and position.
+     * <li>
+     * <ul>viewport must have the same proportions, as bitmap has</ul>
+     * <ul>viewport must not be smaller special value, according to {@link #getMaxZoom()}</ul>
+     * <ul>viewport bounds must not be greater than bitmap bounds</ul>
+     * <ul>viewport position must be inside bitmap bounds (to show some part of the bitmap,
+     * not just empty space)</ul>
+     * </li>
+     */
     private void checkViewportShapeAndBounds() {
-        resolveBounds(viewport.width() * viewport.height(),
+        calculateSize(viewport.width() * viewport.height(),
                 ((float) contentRect.width()) / ((float) contentRect.height()),
                 pointBuffer);
 
@@ -198,6 +221,15 @@ public class ImageBrowserView extends View {
         checkViewportBounds();
     }
 
+    /**
+     * Checks viewport bounds to be in acceptable range and position.
+     * <li>
+     * <ul>viewport must not be smaller special value, according to {@link #getMaxZoom()}</ul>
+     * <ul>viewport bounds must not be greater than bitmap bounds</ul>
+     * <ul>viewport position must be inside bitmap bounds (to show some part of the bitmap,
+     * not just empty space)</ul>
+     * </li>
+     */
     private void checkViewportBounds() {
         if (bitmap == null) return;
 
@@ -222,15 +254,17 @@ public class ImageBrowserView extends View {
     }
 
     /**
-     * Resolves rectangle sides based on it's square and sides scale
+     * Calculates rectangle sides based on it's square and proportions. The point is to create a
+     * new rect with the same square, but with the appropriate proportions of sides. This method
+     * is a part of this process.
      *
-     * @param square square of the source rectangle (width * height)
-     * @param scale  sides factor of the source rectangle (width / height)
-     * @param ret    object, through witch the result would be returned
+     * @param square    square of the source rectangle (width * height)
+     * @param pro       sides factor of the source rectangle (width / height)
+     * @param ret       object, through witch the result would be returned
      */
-    private void resolveBounds(float square, float scale, final Point ret) {
-        float height = (float) Math.sqrt(square / scale);
-        float width = height * scale;
+    private void calculateSize(float square, float pro, final Point ret) {
+        float height = (float) Math.sqrt(square / pro);
+        float width = height * pro;
         ret.set((int) width, (int) height);
     }
 
