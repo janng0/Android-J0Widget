@@ -2,6 +2,8 @@ package ru.jango.j0widget.camera;
 
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
+import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.os.Handler;
 
 import java.net.URI;
@@ -17,22 +19,16 @@ import ru.jango.j0util.PathUtil;
  * <p/>
  * Capabilities:
  * <ul>
- * <li>resize by {@link #setPictureWidth(int)} and {@link #setPictureHeight(int)}</li>
+ * <li>resize by {@link #setPictureSize(android.graphics.Point)}</li>
  * <li>rotate by {@link #setPictureRotation(int)}</li>
- * <li>create thumbnails sized by {@link #setThumbWidth(int)} and {@link #setThumbHeight(int)}</li>
+ * <li>create thumbnails sized by {@link #setThumbSize(android.graphics.Point)}</li>
  * </ul>
  */
 public class BitmapProcessor implements Runnable {
 
-    public static final int DEFAULT_PICTURE_WIDTH = 1280;
-    public static final int DEFAULT_PICTURE_HEIGHT = 1024;
-    public static final int DEFAULT_PICTURE_QUALITY = 70;
-
-    private int picWidth;
-    private int picHeight;
+    private Point picSize;
+    private Point thumbSize;
     private int picQuality;
-    private int thumbWidth;
-    private int thumbHeight;
     private int picRotation;
 
     private byte[] data;
@@ -46,11 +42,9 @@ public class BitmapProcessor implements Runnable {
         this.dataID = dataID;
         this.listener = listener;
 
-        this.picWidth = DEFAULT_PICTURE_WIDTH;
-        this.picHeight = DEFAULT_PICTURE_HEIGHT;
-        this.picQuality = DEFAULT_PICTURE_QUALITY;
-        this.thumbWidth = -1;
-        this.thumbHeight = -1;
+        this.picSize = null;
+        this.thumbSize = null;
+        this.picQuality = 70;
         this.picRotation = 0;
 
         mainTreadHandler = new Handler();
@@ -70,20 +64,20 @@ public class BitmapProcessor implements Runnable {
         return dataID;
     }
 
-    public int getPictureWidth() {
-        return picWidth;
+    public Point getPictureSize() {
+        return picSize;
     }
 
-    public void setPictureWidth(int picWidth) {
-        this.picWidth = picWidth;
+    public void setPictureSize(Point size) {
+        this.picSize = size;
     }
 
-    public int getPictureHeight() {
-        return picHeight;
+    public Point getThumbSize() {
+        return thumbSize;
     }
 
-    public void setPictureHeight(int picHeight) {
-        this.picHeight = picHeight;
+    public void setThumbSize(Point size) {
+        this.thumbSize = size;
     }
 
     public int getPicQuality() {
@@ -92,22 +86,6 @@ public class BitmapProcessor implements Runnable {
 
     public void setPicQuality(int picQuality) {
         this.picQuality = picQuality;
-    }
-
-    public int getThumbWidth() {
-        return thumbWidth;
-    }
-
-    public void setThumbWidth(int thumbWidth) {
-        this.thumbWidth = thumbWidth;
-    }
-
-    public int getThumbHeight() {
-        return thumbHeight;
-    }
-
-    public void setThumbHeight(int thumbHeight) {
-        this.thumbHeight = thumbHeight;
     }
 
     public int getPictureRotation() {
@@ -144,8 +122,7 @@ public class BitmapProcessor implements Runnable {
      * Method will be called on main thread.
      *
      * @param pic   processed bitmap as byte array
-     * @param thumb the same bitmap, but resized to {@link BitmapProcessor#getThumbWidth()}x
-     *              {@link BitmapProcessor#getThumbHeight()}
+     * @param thumb the same bitmap, but resized to {@link BitmapProcessor#getThumbSize()}
      */
     protected void postProcessingFinished(final byte[] pic, final Bitmap thumb) {
         if (listener == null)
@@ -154,7 +131,7 @@ public class BitmapProcessor implements Runnable {
         mainTreadHandler.post(new Runnable() {
             @Override
             public void run() {
-                listener.processingFinished(dataID, pic, thumb);
+                listener.onProcessingFinished(dataID, pic, thumb);
             }
         });
     }
@@ -172,9 +149,47 @@ public class BitmapProcessor implements Runnable {
         mainTreadHandler.post(new Runnable() {
             @Override
             public void run() {
-                listener.processingFailed(dataID, e);
+                listener.onProcessingFailed(dataID, e);
             }
         });
+    }
+
+    /**
+     * Smart picture decoding - checks specified picture size and max Android texture size (2048x2048).
+     */
+    protected Bitmap decodeData() {
+        if (picSize != null)
+            return BmpUtil.scale(data, BmpUtil.ScaleType.PROPORTIONAL_FIT, picSize.x, picSize.y);
+        else if (BmpUtil.isTooBig(data))
+            return BmpUtil.scale(data, BmpUtil.ScaleType.PROPORTIONAL_FIT, BmpUtil.MAX_TEXTURE_SIZE, BmpUtil.MAX_TEXTURE_SIZE);
+        else return BitmapFactory.decodeByteArray(data, 0, data.length);
+    }
+
+    /**
+     * Actually processes picture. Checks max texture size (2048x2048 in Android), scales data if
+     * needed and rotates it if needed.
+     */
+    protected byte[] preparePicture() {
+        Bitmap bmp = decodeData();
+        if (picRotation != 0) {
+            final Bitmap tmp = bmp;
+            bmp = BmpUtil.rotate(bmp, BmpUtil.ScaleType.PROPORTIONAL_CROP, picRotation);
+            tmp.recycle();
+        }
+
+        byte[] pic = BmpUtil.bmpToByte(bmp, findFormat(dataID), picQuality);
+        bmp.recycle();
+
+        return pic;
+    }
+
+    /**
+     * Actually processes thumbnail. Checks specified thumbnail size and does scaling, or returns NULL.
+     */
+    protected Bitmap prepareThumbnail(byte[] preparedPicture) {
+        if (thumbSize != null)
+            return BmpUtil.scale(preparedPicture, BmpUtil.ScaleType.PROPORTIONAL_FIT, thumbSize.x, thumbSize.y);
+        else return null;
     }
 
     /**
@@ -183,21 +198,8 @@ public class BitmapProcessor implements Runnable {
      * bitmap processing work is done here.
      */
     protected void doInBackground() {
-        Bitmap bmp = BmpUtil.scale(data, BmpUtil.ScaleType.PROPORTIONAL_FIT, picWidth, picHeight);
-        if (picRotation != 0) {
-            final Bitmap tmp = bmp;
-            bmp = BmpUtil.rotate(bmp, BmpUtil.ScaleType.PROPORTIONAL_CROP, picRotation);
-            tmp.recycle();
-        }
-
-        final byte[] pic = BmpUtil.bmpToByte(bmp, findFormat(dataID), picQuality);
-        bmp.recycle();
-
-        Bitmap thumb = null;
-        if (thumbHeight > 0 && thumbWidth > 0)
-            thumb = BmpUtil.scale(pic, BmpUtil.ScaleType.PROPORTIONAL_FIT, thumbWidth, thumbHeight);
-
-        postProcessingFinished(pic, thumb);
+        final byte[] pic = preparePicture();
+        postProcessingFinished(pic, prepareThumbnail(pic));
     }
 
     @Override
@@ -217,10 +219,9 @@ public class BitmapProcessor implements Runnable {
          *
          * @param dataID {@link java.net.URI}, that was passed in {@link BitmapProcessor} constructor
          * @param data   processed bitmap as byte array
-         * @param thumb  the same bitmap, but resized to {@link BitmapProcessor#getThumbWidth()}x
-         *               {@link BitmapProcessor#getThumbHeight()}
+         * @param thumb  the same bitmap, but resized to {@link BitmapProcessor#getThumbSize()}
          */
-        public void processingFinished(URI dataID, byte[] data, Bitmap thumb);
+        public void onProcessingFinished(URI dataID, byte[] data, Bitmap thumb);
 
         /**
          * Is called on main thread when the data processing failed.
@@ -228,6 +229,6 @@ public class BitmapProcessor implements Runnable {
          * @param dataID {@link java.net.URI}, that was passed in {@link BitmapProcessor} constructor
          * @param e      fail reason
          */
-        public void processingFailed(URI dataID, Exception e);
+        public void onProcessingFailed(URI dataID, Exception e);
     }
 }
