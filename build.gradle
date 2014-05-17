@@ -26,10 +26,11 @@ android {
 
 dependencies {
     compile 'com.android.support:appcompat-v7:+'
-    compile files('libs/J0Util-1.0.jar')
-    
+    compile files('libs/J0Util-1.0.1.jar')
     androidTestCompile 'junit:junit:4.8.1@jar'
 }
+
+version '1.0'
 
 task makeJavadoc(type: Javadoc, dependsOn: ':J0Widget:compileReleaseJava') {
     destinationDir = project.file('result-jars/javadoc')
@@ -45,7 +46,9 @@ task makeJavadocJar(type: Jar, dependsOn: ':J0Widget:makeJavadoc') {
 
 task makeJar(type: Jar, dependsOn: ':J0Widget:compileReleaseJava') {
     destinationDir project.file('result-jars')
-    from project.file('build/classes/release')
+    from project.file('build/classes/release'), {
+        exclude '**/BuildConfig.class'
+    }
 }
 
 task makeAar(type: Copy, dependsOn: ':J0Widget:bundleRelease') {

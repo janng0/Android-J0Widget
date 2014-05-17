@@ -12,11 +12,10 @@ import java.io.FileOutputStream;
 import java.net.URI;
 
 import ru.jango.j0util.LogUtil;
-import ru.jango.j0util.PathUtil;
 import ru.jango.j0widget.R;
-import ru.jango.j0widget.camera.fragment.CameraFragment;
+import ru.jango.j0widget.camera.fragment.SimpleCameraFragment;
 
-public class CameraTestActivity extends FragmentActivity implements CameraFragment.CameraFragmentListener {
+public class CameraTestActivity extends FragmentActivity implements SimpleCameraFragment.CameraFragmentListener {
 
     private static final String TEST_DIR = "J0Widget_camera_test";
 
@@ -30,7 +29,7 @@ public class CameraTestActivity extends FragmentActivity implements CameraFragme
         testDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), TEST_DIR);
         LogUtil.d(CameraTestActivity.class, "Directory '" + testDir + "' for test files created: " + testDir.mkdir());
 
-        final CameraFragment fragment = (CameraFragment) getSupportFragmentManager().findFragmentById(R.id.camera_fragment);
+        final SimpleCameraFragment fragment = (SimpleCameraFragment) getSupportFragmentManager().findFragmentById(R.id.camera_fragment);
         fragment.setCameraFragmentListener(this);
         fragment.setPictureSize(new Point(1024, 768)); // just in case
         fragment.setThumbnailSize(new Point(50, 50)); // by default thumbnails would not be created - their size is set to (-1,-1)
@@ -82,12 +81,6 @@ public class CameraTestActivity extends FragmentActivity implements CameraFragme
     @Override
     public void onProcessingFailed(URI dataID, Exception e) {
         LogUtil.d(CameraTestActivity.class, "onProcessingFailed: " + e);
-        e.printStackTrace();
-    }
-
-    @Override
-    public void onCameraError(Exception e) {
-        LogUtil.d(CameraTestActivity.class, "onCameraError: " + e);
         e.printStackTrace();
     }
 }

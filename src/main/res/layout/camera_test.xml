@@ -6,7 +6,7 @@
 
     <fragment
         android:id="@+id/camera_fragment"
-        android:name="ru.jango.j0widget.camera.fragment.CameraFragment"
+        android:name="ru.jango.j0widget.camera.fragment.SimpleCameraFragment"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_alignParentBottom="true" />
