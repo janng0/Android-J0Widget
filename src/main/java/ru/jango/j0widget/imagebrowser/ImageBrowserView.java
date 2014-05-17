@@ -19,8 +19,6 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.OverScroller;
 
-import ru.jango.j0util.LogUtil;
-
 public class ImageBrowserView extends View {
 
     public static final float DEFAULT_MAX_ZOOM = 15f;
@@ -171,7 +169,7 @@ public class ImageBrowserView extends View {
      * itself also has paddings and margins. This method creates a rect, that determines, where
      * View's content should actually be drawn.
      *
-     * @param ret   object, through witch the result would be returned
+     * @param ret object, through witch the result would be returned
      */
     private void makeViewportDestRect(final Rect ret) {
         ret.set(0, 0, 0, 0);
@@ -196,8 +194,11 @@ public class ImageBrowserView extends View {
 
     private double getViewportScaleFactor() {
         if (viewport.isEmpty() || contentRect.isEmpty()) return 1d;
-        return Math.max(((double) viewport.width()) / ((double) contentRect.width()),
-                ((double) viewport.height()) / ((double) contentRect.height()));
+
+        double hScale = ((double) viewport.width()) / ((double) contentRect.width());
+        double vScale = ((double) viewport.height()) / ((double) contentRect.height());
+        return (viewport.height() > contentRect.height() || viewport.width() > contentRect.width()) ?
+                Math.max(vScale, hScale) : Math.min(vScale, hScale);
     }
 
     /**
@@ -236,9 +237,8 @@ public class ImageBrowserView extends View {
         if (bitmap == null) return;
 
         if (viewport.width() < bitmap.getWidth() / maxZoom || viewport.height() < bitmap.getHeight() / maxZoom) {
-            int spreadX = (int) (bitmap.getWidth() / maxZoom - viewport.width());
-            int spreadY = (int) (bitmap.getHeight() / maxZoom - viewport.height());
-            viewport.inset(-spreadX, -spreadY);
+            int spread = (int) Math.max(bitmap.getWidth() / maxZoom - viewport.width(), (bitmap.getHeight() / maxZoom - viewport.height()));
+            viewport.inset(-spread, -spread);
         }
 
         if (viewport.width() > bitmap.getWidth()) {
@@ -261,9 +261,9 @@ public class ImageBrowserView extends View {
      * new rect with the same square, but with the appropriate proportions of sides. This method
      * is a part of this process.
      *
-     * @param square    square of the source rectangle (width * height)
-     * @param pro       sides factor of the source rectangle (width / height)
-     * @param ret       object, through witch the result would be returned
+     * @param square square of the source rectangle (width * height)
+     * @param pro    sides factor of the source rectangle (width / height)
+     * @param ret    object, through witch the result would be returned
      */
     private void calculateSize(float square, float pro, final Point ret) {
         float height = (float) Math.sqrt(square / pro);

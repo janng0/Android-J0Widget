@@ -129,7 +129,7 @@ public class Zoomer {
 
     /**
      * Starts a zoom from 1.0 to (1.0 + endZoom). That is, to zoom from 100% to 125%, endZoom should
-     * by 0.25f.
+     * be 0.25f.
      *
      * @see android.widget.Scroller#startScroll(int, int, int, int)
      */
