@@ -15,6 +15,7 @@ import android.widget.RelativeLayout;
 
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import ru.jango.j0util.LogUtil;
@@ -224,12 +225,46 @@ public class CameraFragment extends Fragment implements Camera.PictureCallback, 
     //
     ///////////////////////////////////////////////////////////////
 
+    protected Camera.Size getOptimalSize(List<Camera.Size> sizes) {
+        if (sizes == null)
+            return null;
+
+        // optimal size should be the closest to the required; it could be checked by squares
+        Camera.Size optimalSize = sizes.get(0);
+        for (Camera.Size size : sizes) {
+            final boolean squareCheck = Math.abs(picSize.x * picSize.y - size.width * size.height) <=
+                    Math.abs(picSize.x * picSize.y - optimalSize.width * optimalSize.height);
+            final boolean widthCheck = picSize.x <= size.width;
+            final boolean heightCheck = picSize.y <= size.height;
+
+            if (squareCheck && (widthCheck || heightCheck))
+                optimalSize = size;
+        }
+
+        return optimalSize;
+    }
+
+    /**
+     * Place, where {@link android.hardware.Camera} object is obtained and configured. Reload it for
+     * more configurations.
+     */
+    protected void openCamera() {
+        camera = Camera.open(cameraId);
+
+        final List<Camera.Size> sizes = camera.getParameters().getSupportedPictureSizes();
+        final Camera.Size optimal = getOptimalSize(sizes);
+        final Camera.Parameters params = camera.getParameters();
+
+        params.setPictureSize(optimal.width, optimal.height);
+        camera.setParameters(params);
+    }
+
     /**
      * Opens a {@link android.hardware.Camera} and passes it into {@link CameraPreview}
      */
     public void startPreview() {
         try {
-            camera = Camera.open(cameraId);
+            openCamera();
             preview.setCamera(camera);
         } catch (Exception e) {
             if (cameraListener != null)
@@ -266,7 +301,7 @@ public class CameraFragment extends Fragment implements Camera.PictureCallback, 
         stopPreview();
 
         try {
-            camera = Camera.open(cameraId);
+            openCamera();
             preview.switchCamera(camera);
         } catch (Exception e) {
             if (cameraListener != null)

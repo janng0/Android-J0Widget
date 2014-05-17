@@ -18,12 +18,6 @@ import ru.jango.j0util.RotationUtil;
 
 public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
     
-	private static final int DEFAULT_PICTURE_WIDTH = 1280;
-	private static final int DEFAULT_PICTURE_HEIGHT = 1024;
-	
-	private int picWidth;
-	private int picHeight;
-	
     private SurfaceView surfaceView;
     private Size previewSize;
     private Camera camera;
@@ -35,9 +29,6 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
 
     private void init(Context context) {
     	setBackgroundColor(Color.BLACK);
-    	
-    	picWidth = DEFAULT_PICTURE_WIDTH;
-    	picHeight = DEFAULT_PICTURE_HEIGHT; 
     	previewStarted = false;
     	
         surfaceView = new SurfaceView(context);
@@ -50,36 +41,9 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
         addView(surfaceView);
     }
 
-    /**
-     * @see android.hardware.Camera.Parameters#setPictureSize(int, int)
-     */
-	public int getPictureWidth() {
-		return picWidth;
-	}
-
-    /**
-     * @see android.hardware.Camera.Parameters#setPictureSize(int, int)
-     */
-	public void setPictureWidth(int picWidth) {
-		this.picWidth = picWidth;
-	}
-
-    /**
-     * @see android.hardware.Camera.Parameters#setPictureSize(int, int)
-     */
-	public int getPictureHeight() {
-		return picHeight;
-	}
-
-    /**
-     * @see android.hardware.Camera.Parameters#setPictureSize(int, int)
-     */
-	public void setPictureHeight(int picHeight) {
-		this.picHeight = picHeight;
-	}
-	
     public void setCamera(Camera camera) {
         this.camera = camera;
+        calculatePreviewSize();
     }
 
     /**
@@ -89,7 +53,7 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
     public void startPreview() {
     	if (camera == null || previewSize == null || previewStarted)
     		return;
-    	
+
    		configCamera();
    		try { 
    			surfaceView.setVisibility(View.VISIBLE);
@@ -133,18 +97,11 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
     	setCamera(camera);
     	startPreview();
     }
-    
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     	super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-    	
-        if (camera == null)
-        	return;
-        
-        final List<Size> previewSizes = camera.getParameters().getSupportedPreviewSizes();
-        if (previewSizes != null)
-            previewSize = getOptimalSize(previewSizes, getMeasuredWidth(), getMeasuredHeight());
-        
+        calculatePreviewSize();
         startPreview();
     }
 
@@ -153,12 +110,10 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
     	if (!changed || getChildCount() <= 0)
     		return;
 
-    	int previewWidth = previewSize != null ? previewSize.width : (r - l);
-    	int previewHeight = previewSize != null ? previewSize.height : (b - t);
-
-    	if (RotationUtil.getLayoutOrientation(getContext()) == Configuration.ORIENTATION_PORTRAIT)
-        	surfaceView.layout(0, 0, previewHeight, previewWidth);
-    	else surfaceView.layout(0, 0, previewWidth, previewHeight);
+        if (previewSize == null) surfaceView.layout(0, 0, r - l, b - t);
+    	else if (RotationUtil.getLayoutOrientation(getContext()) == Configuration.ORIENTATION_PORTRAIT)
+            surfaceView.layout(0, 0, previewSize.height, previewSize.width);
+        else surfaceView.layout(0, 0, previewSize.width, previewSize.height);
     }
 
     @Override
@@ -176,42 +131,42 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
     	startPreview();
     }
-    
+
+    private void calculatePreviewSize() {
+        if (camera == null || getMeasuredWidth() == 0 || getMeasuredHeight() == 0)
+            return;
+
+        final List<Size> previewSizes = camera.getParameters().getSupportedPreviewSizes();
+        if (previewSizes != null) {
+            previewSize = getOptimalSize(previewSizes, getMeasuredWidth(), getMeasuredHeight());
+            surfaceView.requestLayout();
+        }
+    }
+
     private void configCamera() {
     	if (camera == null || previewSize == null || previewStarted)
     		return;
-    	
+
         final Camera.Parameters params = camera.getParameters();
-    	final Size picSize = getOptimalSize(params.getSupportedPictureSizes(), picWidth, picHeight);
     	params.setPreviewSize(previewSize.width, previewSize.height);
-    	params.setPictureSize(picSize.width, picSize.height);
 
         camera.setParameters(params);
 		camera.setDisplayOrientation(RotationUtil.getCameraRotation(getContext()));
     }
 
     /**
-     * Heart of the class. Looks through collection of supported by camera sizes and returns the
-     * most suitable.
+     * Looks through collection of supported by camera sizes and returns the most suitable.
      */
     private Size getOptimalSize(List<Size> sizes, int w, int h) {
         if (sizes == null) 
         	return null;
-        
-        Size optimalSize = sizes.get(0);
-        for (Size size : sizes) {
-            // optimal size should be the closest to the required; it could be checked by squares
-        	final boolean squareCheck = (w*h - size.width*size.height) <= 
-        			(w*h - optimalSize.width*optimalSize.height);
 
-            // but it still should be inside required bounds
-        	final boolean widthCheck = size.width <= w;
-        	final boolean heightCheck = size.height <= h;
-        	
-        	if (squareCheck && widthCheck && heightCheck)
+        // optimal size should be the closest to the required; it could be checked by squares
+        Size optimalSize = sizes.get(0);
+        for (Size size : sizes)
+        	if (Math.abs(w*h - size.width*size.height) <= Math.abs(w*h - optimalSize.width*optimalSize.height))
         		optimalSize = size; 
-        }
-    	
+
         return optimalSize;
     }
 }
