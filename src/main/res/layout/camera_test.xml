@@ -5,7 +5,7 @@
     android:layout_height="fill_parent">
 
     <fragment
-        android:id="@+id/fragment"
+        android:id="@+id/camera_fragment"
         android:name="ru.jango.j0widget.camera.fragment.CameraFragment"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"

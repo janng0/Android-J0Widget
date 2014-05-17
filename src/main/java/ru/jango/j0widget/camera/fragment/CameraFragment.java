@@ -43,7 +43,7 @@ public class CameraFragment extends Fragment implements Camera.PictureCallback, 
     protected int photosCount;
 
     private Point picSize;
-    private Point thumbSize;
+    private Point thumbnailSize;
     private int maxCacheSize;
 
     protected RelativeLayout root;
@@ -92,7 +92,7 @@ public class CameraFragment extends Fragment implements Camera.PictureCallback, 
         takePictureFrequency = DEFAULT_TAKE_PICTURE_FREQUENCY;
         maxCacheSize = DEFAULT_MAX_CACHE_SIZE;
         picSize = DEFAULT_PICTURE_SIZE;
-        thumbSize = null;
+        thumbnailSize = null;
     }
 
     @Override
@@ -156,8 +156,8 @@ public class CameraFragment extends Fragment implements Camera.PictureCallback, 
      * {@link CameraFragment.CameraFragmentListener#onProcessingFinished(java.net.URI, byte[], android.graphics.Bitmap)}.
      * If thumbnail size is not specified - no thumbnail would be created.
      */
-    public Point getThumbSize() {
-        return thumbSize;
+    public Point getThumbnailSize() {
+        return thumbnailSize;
     }
 
     /**
@@ -165,8 +165,8 @@ public class CameraFragment extends Fragment implements Camera.PictureCallback, 
      * {@link CameraFragment.CameraFragmentListener#onProcessingFinished(java.net.URI, byte[], android.graphics.Bitmap)}.
      * If thumbnail size is not specified - no thumbnail would be created.
      */
-    public void setThumbSize(Point size) {
-        this.thumbSize = size;
+    public void setThumbnailSize(Point size) {
+        this.thumbnailSize = size;
     }
 
     /**
@@ -354,10 +354,13 @@ public class CameraFragment extends Fragment implements Camera.PictureCallback, 
     }
 
     private void processBitmap(URI dataID, byte[] data) {
+        if (dataID == null || data == null)
+            return;
+
         final BitmapProcessor bmpProc = new BitmapProcessor(data, dataID, this);
         bmpProc.setPictureRotation(getRotation());
         bmpProc.setPictureSize(picSize);
-        bmpProc.setThumbSize(thumbSize);
+        bmpProc.setThumbnailSize(thumbnailSize);
 
         new Thread(bmpProc).start();
     }
@@ -399,12 +402,12 @@ public class CameraFragment extends Fragment implements Camera.PictureCallback, 
     }
 
     @Override
-    public void onProcessingFinished(URI dataID, byte[] data, Bitmap thumb) {
+    public void onProcessingFinished(URI dataID, byte[] data, Bitmap thumbnail) {
         cache.put(dataID, data);
         photosCount++;
 
         if (cameraListener != null)
-            cameraListener.onProcessingFinished(dataID, data, thumb);
+            cameraListener.onProcessingFinished(dataID, data, thumbnail);
     }
 
     @Override
@@ -428,14 +431,14 @@ public class CameraFragment extends Fragment implements Camera.PictureCallback, 
         /**
          * Called when processing was successfully finished.
          *
-         * @param dataID    {@link java.net.URI} aka photo ID; this object was previously returned
-         *                   from {@link #onPictureTaken()}
-         * @param data      transformed photo as byte array
-         * @param thumb     small thumbnail of the photo, that could be actually shown on the screen
+         * @param dataID        {@link java.net.URI} aka photo ID; this object was previously returned
+         *                      from {@link #onPictureTaken()}
+         * @param data          transformed photo as byte array
+         * @param thumbnail     small thumbnail of the photo, that could be actually shown on the screen
          *
-         * @see #setThumbSize(android.graphics.Point)
+         * @see #setThumbnailSize(android.graphics.Point)
          */
-        public void onProcessingFinished(URI dataID, byte[] data, Bitmap thumb);
+        public void onProcessingFinished(URI dataID, byte[] data, Bitmap thumbnail);
 
         /**
          * Called when processing was stopped due to some error.

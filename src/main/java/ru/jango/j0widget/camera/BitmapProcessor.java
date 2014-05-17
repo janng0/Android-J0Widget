@@ -21,13 +21,13 @@ import ru.jango.j0util.PathUtil;
  * <ul>
  * <li>resize by {@link #setPictureSize(android.graphics.Point)}</li>
  * <li>rotate by {@link #setPictureRotation(int)}</li>
- * <li>create thumbnails sized by {@link #setThumbSize(android.graphics.Point)}</li>
+ * <li>create thumbnails sized by {@link #setThumbnailSize(android.graphics.Point)}</li>
  * </ul>
  */
 public class BitmapProcessor implements Runnable {
 
     private Point picSize;
-    private Point thumbSize;
+    private Point thumbnailSize;
     private int picQuality;
     private int picRotation;
 
@@ -43,7 +43,7 @@ public class BitmapProcessor implements Runnable {
         this.listener = listener;
 
         this.picSize = null;
-        this.thumbSize = null;
+        this.thumbnailSize = null;
         this.picQuality = 70;
         this.picRotation = 0;
 
@@ -72,12 +72,12 @@ public class BitmapProcessor implements Runnable {
         this.picSize = size;
     }
 
-    public Point getThumbSize() {
-        return thumbSize;
+    public Point getThumbnailSize() {
+        return thumbnailSize;
     }
 
-    public void setThumbSize(Point size) {
-        this.thumbSize = size;
+    public void setThumbnailSize(Point size) {
+        this.thumbnailSize = size;
     }
 
     public int getPicQuality() {
@@ -121,17 +121,17 @@ public class BitmapProcessor implements Runnable {
      * Invokes listener, that bitmap was processed successfully, if the listener was previously set.
      * Method will be called on main thread.
      *
-     * @param pic   processed bitmap as byte array
-     * @param thumb the same bitmap, but resized to {@link BitmapProcessor#getThumbSize()}
+     * @param pic       processed bitmap as byte array
+     * @param thumbnail the same bitmap, but resized to {@link BitmapProcessor#getThumbnailSize()}
      */
-    protected void postProcessingFinished(final byte[] pic, final Bitmap thumb) {
+    protected void postProcessingFinished(final byte[] pic, final Bitmap thumbnail) {
         if (listener == null)
             return;
 
         mainTreadHandler.post(new Runnable() {
             @Override
             public void run() {
-                listener.onProcessingFinished(dataID, pic, thumb);
+                listener.onProcessingFinished(dataID, pic, thumbnail);
             }
         });
     }
@@ -173,7 +173,7 @@ public class BitmapProcessor implements Runnable {
         Bitmap bmp = decodeData();
         if (picRotation != 0) {
             final Bitmap tmp = bmp;
-            bmp = BmpUtil.rotate(bmp, BmpUtil.ScaleType.PROPORTIONAL_CROP, picRotation);
+            bmp = BmpUtil.rotate(bmp, null, picRotation);
             tmp.recycle();
         }
 
@@ -187,8 +187,8 @@ public class BitmapProcessor implements Runnable {
      * Actually processes thumbnail. Checks specified thumbnail size and does scaling, or returns NULL.
      */
     protected Bitmap prepareThumbnail(byte[] preparedPicture) {
-        if (thumbSize != null)
-            return BmpUtil.scale(preparedPicture, BmpUtil.ScaleType.PROPORTIONAL_FIT, thumbSize.x, thumbSize.y);
+        if (thumbnailSize != null)
+            return BmpUtil.scale(preparedPicture, BmpUtil.ScaleType.PROPORTIONAL_FIT, thumbnailSize.x, thumbnailSize.y);
         else return null;
     }
 
@@ -217,11 +217,11 @@ public class BitmapProcessor implements Runnable {
         /**
          * Is called on main thread when the data was successfully processed.
          *
-         * @param dataID {@link java.net.URI}, that was passed in {@link BitmapProcessor} constructor
-         * @param data   processed bitmap as byte array
-         * @param thumb  the same bitmap, but resized to {@link BitmapProcessor#getThumbSize()}
+         * @param dataID        {@link java.net.URI}, that was passed in {@link BitmapProcessor} constructor
+         * @param data          processed bitmap as byte array
+         * @param thumbnail     the same bitmap, but resized to {@link BitmapProcessor#getThumbnailSize()}
          */
-        public void onProcessingFinished(URI dataID, byte[] data, Bitmap thumb);
+        public void onProcessingFinished(URI dataID, byte[] data, Bitmap thumbnail);
 
         /**
          * Is called on main thread when the data processing failed.
