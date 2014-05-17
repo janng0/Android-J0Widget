@@ -19,6 +19,8 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.OverScroller;
 
+import ru.jango.j0util.LogUtil;
+
 public class ImageBrowserView extends View {
 
     public static final float DEFAULT_MAX_ZOOM = 15f;
@@ -82,11 +84,11 @@ public class ImageBrowserView extends View {
             return;
         }
 
-        bitmap = drawableToBitmap(drawable);
+        setImageBitmap(drawableToBitmap(drawable));
     }
 
     public void setImageResource(int res) {
-        bitmap = BitmapFactory.decodeResource(getResources(), res);
+        setImageBitmap(BitmapFactory.decodeResource(getResources(), res));
     }
 
     public Bitmap getBitmap() {
@@ -110,7 +112,7 @@ public class ImageBrowserView extends View {
         int height = drawable.getIntrinsicHeight();
         height = height > 0 ? height : 1;
 
-        Bitmap bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
+        final Bitmap bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
         drawable.draw(canvas);
@@ -140,8 +142,8 @@ public class ImageBrowserView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        return scaleGestureDetector.onTouchEvent(event) ||
-                gestureDetector.onTouchEvent(event) ||
+        return scaleGestureDetector.onTouchEvent(event) |
+                gestureDetector.onTouchEvent(event) |
                 super.onTouchEvent(event);
     }
 
@@ -192,10 +194,10 @@ public class ImageBrowserView extends View {
         viewport.set(0, 0, bitmap.getWidth(), bitmap.getHeight());
     }
 
-    private float getViewportScaleFactor() {
-        if (viewport.isEmpty() || contentRect.isEmpty()) return 1f;
-        return Math.max(((float) viewport.width()) / ((float) contentRect.width()),
-                ((float) viewport.height()) / ((float) contentRect.height()));
+    private double getViewportScaleFactor() {
+        if (viewport.isEmpty() || contentRect.isEmpty()) return 1d;
+        return Math.max(((double) viewport.width()) / ((double) contentRect.width()),
+                ((double) viewport.height()) / ((double) contentRect.height()));
     }
 
     /**
@@ -233,9 +235,10 @@ public class ImageBrowserView extends View {
     private void checkViewportBounds() {
         if (bitmap == null) return;
 
-        if (viewport.width() < bitmap.getWidth() / maxZoom || viewport.height() < bitmap.getWidth() / maxZoom) {
-            int spread = (int) Math.max(bitmap.getWidth() / maxZoom - viewport.width(), bitmap.getWidth() / maxZoom - viewport.height());
-            viewport.inset(-spread, -spread);
+        if (viewport.width() < bitmap.getWidth() / maxZoom || viewport.height() < bitmap.getHeight() / maxZoom) {
+            int spreadX = (int) (bitmap.getWidth() / maxZoom - viewport.width());
+            int spreadY = (int) (bitmap.getHeight() / maxZoom - viewport.height());
+            viewport.inset(-spreadX, -spreadY);
         }
 
         if (viewport.width() > bitmap.getWidth()) {

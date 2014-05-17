@@ -10,7 +10,7 @@
 
     <application>
         <activity
-            android:name="ru.jango.j0widget.test.CameraTestActivity" >
+            android:name="ru.jango.j0widget.test.ImageBrowserTestActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
