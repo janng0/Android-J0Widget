@@ -140,6 +140,8 @@ public class ImageBrowserView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if (bitmap == null) return false;
+
         return scaleGestureDetector.onTouchEvent(event) |
                 gestureDetector.onTouchEvent(event) |
                 super.onTouchEvent(event);
@@ -148,6 +150,7 @@ public class ImageBrowserView extends View {
     @Override
     public void computeScroll() {
         super.computeScroll();
+        if (bitmap == null) return;
 
         if (scroller.computeScrollOffset()) {
             viewport.offset(scroller.getCurrX() - viewport.left, 0);
@@ -212,6 +215,8 @@ public class ImageBrowserView extends View {
      * </ul>
      */
     private void checkViewportShapeAndBounds() {
+        if (bitmap == null) return;
+
         calculateSize(viewport.width() * viewport.height(),
                 ((float) contentRect.width()) / ((float) contentRect.height()),
                 pointBuffer);
