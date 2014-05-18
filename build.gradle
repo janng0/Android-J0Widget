@@ -30,7 +30,7 @@ dependencies {
     androidTestCompile 'junit:junit:4.8.1@jar'
 }
 
-version '1.0'
+version '1.0.1'
 
 task makeJavadoc(type: Javadoc, dependsOn: ':J0Widget:compileReleaseJava') {
     destinationDir = project.file('result-jars/javadoc')
@@ -48,6 +48,8 @@ task makeJar(type: Jar, dependsOn: ':J0Widget:compileReleaseJava') {
     destinationDir project.file('result-jars')
     from project.file('build/classes/release'), {
         exclude '**/BuildConfig.class'
+        exclude '**/R.class'
+        exclude '**/R$**.class'
     }
 }
 
