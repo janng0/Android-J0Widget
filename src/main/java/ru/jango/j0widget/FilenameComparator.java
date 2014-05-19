@@ -5,12 +5,19 @@ import java.util.Comparator;
 import ru.jango.j0util.PathUtil;
 
 /**
- * Special comparator for sorting strings. In {@link #cmp(Object, Object)} would be called
- * {@link Object#toString()} on both objects and then they would be compared.
+ * Special comparator for sorting lists of URIs, URLs, File objects etc.. In {@link #cmp(Object, Object)}
+ * would be called {@link Object#toString()} on both objects, then filename would be extracted and
+ * then they would be compared. Like this:
+ * <p>
+ * <code>
+ * final String s1 = PathUtil.getFilenameWithoutExt(obj1.toString());
+ * final String s2 = PathUtil.getFilenameWithoutExt(obj2.toString());
+ * </code>
+ * </p>
  *
  * @see java.util.Collections#sort(java.util.List, java.util.Comparator)
  */
-public class StringComparator<T> implements Comparator<T> {
+public class FilenameComparator<T> implements Comparator<T> {
 
     @Override
     public int compare(T obj1, T obj2) {
