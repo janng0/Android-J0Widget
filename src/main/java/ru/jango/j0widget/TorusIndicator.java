@@ -15,22 +15,22 @@ import android.view.View;
  */
 public class TorusIndicator extends View {
 
-    public static final float DEFAULT_LOADING_INDICATOR_BOLDNESS = 7;
-    public static final int DEFAULT_LOADING_INDICATOR_BACKGROUND_COLOR = Color.DKGRAY;
-    public static final int DEFAULT_LOADING_INDICATOR_COLOR = Color.LTGRAY;
-    public static final int DEFAULT_FAIL_INDICATOR_COLOR = Color.rgb(255, 100, 100);
-    public static final int DEFAULT_INDICATOR_MAX_SIZE = 120;
+    public static final float DEFAULT_BOLDNESS = 7;
+    public static final int DEFAULT_BACKGROUND_COLOR = Color.DKGRAY;
+    public static final int DEFAULT_COLOR = Color.LTGRAY;
+    public static final int DEFAULT_FAIL_COLOR = Color.rgb(255, 100, 100);
+    public static final int DEFAULT_MAX_SIZE = 120;
 
-    private final RectF loadingIndicatorRect = new RectF();
-    private final Paint loadingIndicatorBGPaint = new Paint();
-    private final Paint loadingIndicatorPaint = new Paint();
-    private final Paint failIndicatorPaint = new Paint();
+    private final RectF drawRect = new RectF();
+    private final Paint bgPaint = new Paint();
+    private final Paint paint = new Paint();
+    private final Paint failPaint = new Paint();
 
-    private float loadingIndBoldness;
-    private int loadingIndBGColor;
-    private int loadingIndColor;
-    private int failIndColor;
-    private int indMaxSize;
+    private float boldness;
+    private int bgColor;
+    private int color;
+    private int failColor;
+    private int maxSize;
 
     private int progress;
 
@@ -39,28 +39,28 @@ public class TorusIndicator extends View {
     public TorusIndicator(Context context, AttributeSet attrs, int defStyle) { super(context, attrs, defStyle); init(); }
 
     private void init() {
-        loadingIndBoldness = DEFAULT_LOADING_INDICATOR_BOLDNESS;
-        loadingIndBGColor = DEFAULT_LOADING_INDICATOR_BACKGROUND_COLOR;
-        loadingIndColor = DEFAULT_LOADING_INDICATOR_COLOR;
-        failIndColor = DEFAULT_FAIL_INDICATOR_COLOR;
-        indMaxSize = DEFAULT_INDICATOR_MAX_SIZE;
+        boldness = DEFAULT_BOLDNESS;
+        bgColor = DEFAULT_BACKGROUND_COLOR;
+        color = DEFAULT_COLOR;
+        failColor = DEFAULT_FAIL_COLOR;
+        maxSize = DEFAULT_MAX_SIZE;
 
         initPaints();
     }
 
     private void initPaints() {
-        fillLoadingIndicatorBGPaint(loadingIndicatorBGPaint);
-        fillLoadingIndicatorPaint(loadingIndicatorPaint);
-        fillFailIndicatorPaint(failIndicatorPaint);
+        fillBGPaint(bgPaint);
+        fillPaint(paint);
+        fillFailPaint(failPaint);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         if (progress >= 0 && progress <= 100) {
-            canvas.drawArc(loadingIndicatorRect, 0, 360, false, loadingIndicatorBGPaint);
+            canvas.drawArc(drawRect, 0, 360, false, bgPaint);
             if (progress != 0)
-                canvas.drawArc(loadingIndicatorRect, 0, progress * 360 / 100, false, loadingIndicatorPaint);
-        } else canvas.drawArc(loadingIndicatorRect, 0, 360, false, failIndicatorPaint);
+                canvas.drawArc(drawRect, 0, progress * 360 / 100, false, paint);
+        } else canvas.drawArc(drawRect, 0, 360, false, failPaint);
     }
 
     @Override
@@ -68,7 +68,7 @@ public class TorusIndicator extends View {
         super.onSizeChanged(w, h, oldW, oldH);
         initPaints();
 
-        getLoadingIndicatorRect(loadingIndicatorRect);
+        getRect(drawRect);
     }
 
     ////////////////////////////////////////////////////////////////////////
@@ -77,25 +77,16 @@ public class TorusIndicator extends View {
     //
     ////////////////////////////////////////////////////////////////////////
 
-    private int getIndicatorSize() {
-        return Math.min(Math.min(getWidth(), getHeight()), indMaxSize);
+    private int getSize() {
+        return Math.min(Math.min(getWidth(), getHeight()), maxSize);
     }
 
-    /**
-     * Just centers rect inside view.
-     */
-    private RectF getIndicatorRect(final RectF ret) {
-        ret.set((getMeasuredWidth() - getIndicatorSize()) / 2,
-                (getMeasuredHeight() - getIndicatorSize()) / 2,
-                (getMeasuredWidth() + getIndicatorSize()) / 2,
-                (getMeasuredHeight() + getIndicatorSize()) / 2);
-
-        return ret;
-    }
-
-    private RectF getLoadingIndicatorRect(final RectF ret) {
-        getIndicatorRect(ret);
-        ret.inset(loadingIndBoldness / 2, loadingIndBoldness / 2);
+    private RectF getRect(final RectF ret) {
+        ret.set((getMeasuredWidth() - getSize()) / 2,
+                (getMeasuredHeight() - getSize()) / 2,
+                (getMeasuredWidth() + getSize()) / 2,
+                (getMeasuredHeight() + getSize()) / 2);
+        ret.inset(boldness / 2, boldness / 2);
 
         return ret;
     }
@@ -108,18 +99,18 @@ public class TorusIndicator extends View {
         paint.setAntiAlias(true);
     }
 
-    private Paint fillLoadingIndicatorBGPaint(final Paint paint) {
-        fillStandardPaint(loadingIndBoldness, loadingIndBGColor, paint);
+    private Paint fillBGPaint(final Paint paint) {
+        fillStandardPaint(boldness, bgColor, paint);
         return paint;
     }
 
-    private Paint fillLoadingIndicatorPaint(final Paint paint) {
-        fillStandardPaint(loadingIndBoldness, loadingIndColor, paint);
+    private Paint fillPaint(final Paint paint) {
+        fillStandardPaint(boldness, color, paint);
         return paint;
     }
 
-    private Paint fillFailIndicatorPaint(final Paint paint) {
-        fillStandardPaint(loadingIndBoldness, failIndColor, paint);
+    private Paint fillFailPaint(final Paint paint) {
+        fillStandardPaint(boldness, failColor, paint);
         return paint;
     }
 
@@ -146,72 +137,72 @@ public class TorusIndicator extends View {
     /**
      * Sets boldness of the line of the indicator torus.
      */
-    public void setLoadingIndicatorBoldness(float boldness) {
-        loadingIndBoldness = boldness;
-        getLoadingIndicatorRect(loadingIndicatorRect);
+    public void setBoldness(float boldness) {
+        this.boldness = boldness;
+        getRect(drawRect);
         invalidate();
     }
 
     /**
      * Returns boldness of the line of the indicator torus.
      */
-    public float getLoadingIndicatorBoldness() {
-        return loadingIndBoldness;
+    public float getBoldness() {
+        return boldness;
     }
 
     /**
      * Sets color of the background torus.
      */
-    public void setLoadingIndicatorBackgroundColor(int color) {
-        loadingIndBGColor = color;
-        fillLoadingIndicatorBGPaint(loadingIndicatorBGPaint);
+    public void setIndicatorBackgroundColor(int color) {
+        bgColor = color;
+        fillBGPaint(bgPaint);
         invalidate();
     }
 
     /**
      * Returns color of the background torus.
      */
-    public int getLoadingIndicatorBackgroundColor() {
-        return loadingIndBGColor;
+    public int getIndicatorBackgroundColor() {
+        return bgColor;
     }
 
     /**
      * Sets color of the foreground torus.
      */
-    public void setLoadingIndicatorColor(int color) {
-        loadingIndColor = color;
-        fillLoadingIndicatorPaint(loadingIndicatorPaint);
+    public void setColor(int color) {
+        this.color = color;
+        fillPaint(paint);
         invalidate();
     }
 
     /**
      * Returns color of the foreground torus.
      */
-    public int getLoadingIndicatorColor() {
-        return loadingIndColor;
+    public int getColor() {
+        return color;
     }
 
     /**
      * Sets color of the fail indicator torus.
      */
-    public int getFailIndicatorColor() {
-        return failIndColor;
+    public int getFailColor() {
+        return failColor;
     }
 
     /**
      * Returns color of the fail indicator torus.
      */
-    public void setFailIndicatorColor(int failIndColor) {
-        this.failIndColor = failIndColor;
+    public void setFailColor(int failIndColor) {
+        this.failColor = failIndColor;
     }
 
     /**
      * Indicator size is calculated based on current view size, but it could be
      * limited by this method.
      */
-    public void setMaxIndicatorSize(int sizePx) {
-        indMaxSize = sizePx;
-        getLoadingIndicatorRect(loadingIndicatorRect);
+    public void setMaxSize(int sizePx) {
+        maxSize = sizePx;
+        getRect(drawRect);
         invalidate();
     }
 
@@ -219,8 +210,8 @@ public class TorusIndicator extends View {
      * Indicator size is calculated based on current view size, but it could be
      * limited by this value.
      */
-    public int getMaxIndicatorSize() {
-        return indMaxSize;
+    public int getMaxSize() {
+        return maxSize;
     }
 
 }
