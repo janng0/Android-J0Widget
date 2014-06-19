@@ -30,7 +30,7 @@ dependencies {
     androidTestCompile 'junit:junit:4.8.1@jar'
 }
 
-version '1.0.2'
+version '1.0.3'
 
 task makeJavadoc(type: Javadoc, dependsOn: ':J0Widget:compileReleaseJava') {
     destinationDir = project.file('result-jars/javadoc')
