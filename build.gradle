@@ -4,28 +4,28 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.9.+'
+        classpath 'com.android.tools.build:gradle:0.12.+'
     }
 }
 
-apply plugin: 'android-library'
+apply plugin: 'com.android.library'
 
 repositories {
     mavenCentral()
 }
 
 android {
-    compileSdkVersion 14
-    buildToolsVersion '19.0.3'
+    compileSdkVersion 20
+    buildToolsVersion '20'
 
     defaultConfig {
         minSdkVersion 10
-        targetSdkVersion 14
+        targetSdkVersion 10
     }
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:+'
+    compile 'com.android.support:appcompat-v7:20+'
     compile files('libs/J0Util-1.0.1.jar')
     androidTestCompile 'junit:junit:4.8.1@jar'
 }
@@ -35,7 +35,7 @@ version '1.0.3'
 task makeJavadoc(type: Javadoc, dependsOn: ':J0Widget:compileReleaseJava') {
     destinationDir = project.file('result-jars/javadoc')
     source = fileTree(dir: 'src/main/java')
-    classpath = files("${android.plugin.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar")
+//    classpath = files("${android.plugin.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar")
 }
 
 task makeJavadocJar(type: Jar, dependsOn: ':J0Widget:makeJavadoc') {
